@@ -28,28 +28,28 @@ namespace Automatik.Api
 
                 var headerAttrs = targetMethod.GetCustomAttributes<ApiMethodHeaderAttribute>();
                 if (headerAttrs.Any()) {
-                    var headersFromAttrs = headerAttrs.ToDictionary(attr => attr.Name, attr => attr.Value);
+                    var headersFromAttrs = headerAttrs.ToDictionary(attr => attr.Name.ToLower(), attr => attr.Value);
                     request.AddHeaders(headersFromAttrs);
-                    headers.Union(headersFromAttrs).ToDictionary(kv => kv.Key, kv => kv.Value);
+                    headers = headers.Union(headersFromAttrs).ToDictionary(kv => kv.Key, kv => kv.Value);
                 }
 
                 var formParams = new Dictionary<string, string>();
 
                 foreach (var parameterInfo in targetMethod.GetParameters())
                 {
-                    var ApiMethodParamAttr = parameterInfo.GetCustomAttribute<ApiMethodParamAttribute>();
-                    if (ApiMethodParamAttr == null)
+                    var apiMethodParamAttr = parameterInfo.GetCustomAttribute<ApiMethodParamAttribute>();
+                    if (apiMethodParamAttr == null)
                         continue;
 
-                    switch (ApiMethodParamAttr.Type)
+                    switch (apiMethodParamAttr.Type)
                     {
                         case ApiMethodParamType.Header:
-                            headers.Add(ApiMethodParamAttr.Name.ToLower(), args[parameterInfo.Position]?.ToString() ?? "");
-                            request.AddHeader(ApiMethodParamAttr.Name, args[parameterInfo.Position]?.ToString() ?? "");
+                            headers.Add(apiMethodParamAttr.Name.ToLower(), args[parameterInfo.Position]?.ToString() ?? "");
+                            request.AddHeader(apiMethodParamAttr.Name, args[parameterInfo.Position]?.ToString() ?? "");
                             break;
 
                         case ApiMethodParamType.BodyParam:
-                            formParams.Add(ApiMethodParamAttr.Name, args[parameterInfo.Position]?.ToString() ?? "");
+                            formParams.Add(apiMethodParamAttr.Name, args[parameterInfo.Position]?.ToString() ?? "");
                             break;
 
                         case ApiMethodParamType.File:
@@ -57,7 +57,7 @@ namespace Automatik.Api
                             if (args[parameterInfo.Position] != null)
                             {
                                 if (args[parameterInfo.Position].GetType() == typeof(string))
-                                    request.AddFile(ApiMethodParamAttr.Name, (string)args[parameterInfo.Position]);
+                                    request.AddFile(apiMethodParamAttr.Name, (string)args[parameterInfo.Position]);
                             }
 
                             break;
@@ -118,7 +118,7 @@ namespace Automatik.Api
             if (url == null)
                 throw new Exception($"Neither [{nameof(ApiAttribute.Url)}] nor [{nameof(ApiAttribute.UrlProvider)}] provided not null string.");
 
-            client = new RestClient();
+            client = new RestClient(url);
 
             var headerAttrs = typeof(TApi).GetCustomAttributes<ApiHeaderAttribute>();
             if (headerAttrs.Any()) {
