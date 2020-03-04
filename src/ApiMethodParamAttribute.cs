@@ -5,9 +5,9 @@ namespace Automatik.Api
     public enum ApiMethodParamType
     {
         Header,
-        Cookie,
-        UrlParam,
-        QueryParam,
+        // Cookie,
+        // UrlParam,
+        // QueryParam,
         BodyParam,
         File
     }
